@@ -2,14 +2,16 @@ package grpc_reqAuth
 
 import (
 	"context"
+	"errors"
 	"runtime"
 
 	"github.com/hypebid/go-kit/grpc/middleware"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
-func UnaryServerInterceptor(log *logrus.Logger) grpc.UnaryServerInterceptor {
+func UnaryServerInterceptor(log *logrus.Logger, opts Options) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		// Get transaction Id from ctx and build method logger
 		tId := ctx.Value(middleware.Grpc_ReqId_Marker)
@@ -17,6 +19,11 @@ func UnaryServerInterceptor(log *logrus.Logger) grpc.UnaryServerInterceptor {
 		logger := log.WithFields(logrus.Fields{"transaction-id": tId, "method": runtime.FuncForPC(pc).Name()})
 
 		logger.Info("starting req auth...")
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			return nil, errors.New("no metadata")
+		}
+		logger.Info("metadata: ", md)
 
 		return handler(ctx, req)
 	}
