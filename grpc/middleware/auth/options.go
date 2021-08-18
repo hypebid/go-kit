@@ -1,5 +1,7 @@
 package grpc_reqAuth
 
 type Options struct {
-	HashSecret string
+	HashSecret      string
+	MetadataKeyList []string
+	MetadataHashKey string
 }
