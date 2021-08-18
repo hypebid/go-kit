@@ -44,11 +44,12 @@ func UnaryServerInterceptor(log *logrus.Logger, opts Options) grpc.UnaryServerIn
 		expectedMAC := mac.Sum(nil)
 
 		// verify hash matches
-		logger.Info("verify hash matches")
-		if md.Get("hypebid-nohash")[0] == "false" &&
-			len(md.Get(opts.MetadataHashKey)) != 0 &&
+		logger.Info("validating hashes...")
+		if md.Get("hypebid-nohash")[0] == "true" {
+			return handler(ctx, req)
+		} else if len(md.Get(opts.MetadataHashKey)) != 0 &&
 			hmac.Equal([]byte(md.Get(opts.MetadataHashKey)[0]), expectedMAC) {
-			logger.Info("hmac hash does match")
+			logger.Info("hmac hash matches")
 			return handler(ctx, req)
 		}
 		logger.Info("hmac hash does not match")
